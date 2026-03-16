@@ -2,8 +2,25 @@
 
 from __future__ import annotations
 
-from enum import StrEnum, auto
+import sys
+from enum import Enum, auto
 from typing import Any, TypeAlias
+
+if sys.version_info >= (3, 11):
+    from enum import StrEnum
+else:
+
+    class StrEnum(str, Enum):  # type: ignore[no-redef]
+        """Backport of StrEnum for Python 3.10."""
+
+        @staticmethod
+        def _generate_next_value_(
+            name: str,
+            start: int,
+            count: int,
+            last_values: list,  # noqa: ARG004
+        ) -> str:
+            return name.lower()
 
 
 class ProblemType(StrEnum):
