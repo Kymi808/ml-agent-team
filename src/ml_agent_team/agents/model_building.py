@@ -134,8 +134,10 @@ class ModelBuildingAgent(BaseAgent):
 
         self.logger.info("model_building_complete", built=len(built_models))
 
-        return self._result_message({
-            "models_built": len(built_models),
-            "model_names": [type(m).__name__ for m in built_models],
-            "total_hyperparams": sum(len(s) for s in hp_spaces.values()),
-        })
+        return self._result_message(
+            {
+                "models_built": len(built_models),
+                "model_names": [type(m).__name__ for m in built_models],
+                "total_hyperparams": sum(len(s) for s in hp_spaces.values()),
+            }
+        )

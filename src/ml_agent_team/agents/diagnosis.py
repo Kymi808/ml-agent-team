@@ -50,7 +50,10 @@ class DiagnosisAgent(BaseAgent):
         issues.extend(self._check_success_criteria(metrics))
 
         # 4. Check class imbalance effects (classification)
-        if problem_type in (ProblemType.BINARY_CLASSIFICATION, ProblemType.MULTICLASS_CLASSIFICATION):
+        if problem_type in (
+            ProblemType.BINARY_CLASSIFICATION,
+            ProblemType.MULTICLASS_CLASSIFICATION,
+        ):
             issues.extend(self._check_class_imbalance(metrics))
 
         # 5. Check CV variance
@@ -75,20 +78,24 @@ class DiagnosisAgent(BaseAgent):
             is_acceptable=self.state.is_acceptable,
         )
 
-        return self._result_message({
-            "total_issues": len(issues),
-            "critical_issues": len(critical_issues),
-            "error_issues": len(error_issues),
-            "is_acceptable": self.state.is_acceptable,
-            "issues_summary": [
-                {"severity": i["severity"], "description": i["description"]}
-                for i in issues
-            ],
-        })
+        return self._result_message(
+            {
+                "total_issues": len(issues),
+                "critical_issues": len(critical_issues),
+                "error_issues": len(error_issues),
+                "is_acceptable": self.state.is_acceptable,
+                "issues_summary": [
+                    {"severity": i["severity"], "description": i["description"]} for i in issues
+                ],
+            }
+        )
 
     def _check_fitting(
-        self, model: Any, metrics: dict[str, float],
-        cv_scores: list[float], problem_type: ProblemType | None,
+        self,
+        model: Any,
+        metrics: dict[str, float],
+        cv_scores: list[float],
+        problem_type: ProblemType | None,
     ) -> list[dict[str, Any]]:
         """Check for overfitting or underfitting."""
         issues: list[dict[str, Any]] = []
@@ -99,7 +106,10 @@ class DiagnosisAgent(BaseAgent):
         cv_mean = float(np.mean(cv_scores))
 
         # Get test score for comparison
-        if problem_type in (ProblemType.BINARY_CLASSIFICATION, ProblemType.MULTICLASS_CLASSIFICATION):
+        if problem_type in (
+            ProblemType.BINARY_CLASSIFICATION,
+            ProblemType.MULTICLASS_CLASSIFICATION,
+        ):
             test_score = metrics.get("f1_weighted", metrics.get("accuracy", 0))
         else:
             test_score = metrics.get("r2", 0)
@@ -107,83 +117,100 @@ class DiagnosisAgent(BaseAgent):
         # Overfitting: train/CV score much higher than test score
         gap = cv_mean - test_score
         if gap > 0.1:
-            issues.append({
-                "type": "overfitting",
-                "severity": Severity.ERROR,
-                "description": (
-                    f"Possible overfitting detected: CV score ({cv_mean:.4f}) is significantly "
-                    f"higher than test score ({test_score:.4f}), gap = {gap:.4f}"
-                ),
-                "recommendation": "Increase regularization, reduce model complexity, or add more training data",
-                "cv_score": cv_mean,
-                "test_score": test_score,
-            })
+            issues.append(
+                {
+                    "type": "overfitting",
+                    "severity": Severity.ERROR,
+                    "description": (
+                        f"Possible overfitting detected: CV score ({cv_mean:.4f}) is significantly "
+                        f"higher than test score ({test_score:.4f}), gap = {gap:.4f}"
+                    ),
+                    "recommendation": "Increase regularization, reduce model complexity, or add more training data",
+                    "cv_score": cv_mean,
+                    "test_score": test_score,
+                }
+            )
         elif gap > 0.05:
-            issues.append({
-                "type": "mild_overfitting",
-                "severity": Severity.WARNING,
-                "description": (
-                    f"Mild overfitting: CV score ({cv_mean:.4f}) slightly higher than "
-                    f"test score ({test_score:.4f}), gap = {gap:.4f}"
-                ),
-                "recommendation": "Monitor but may be acceptable",
-            })
+            issues.append(
+                {
+                    "type": "mild_overfitting",
+                    "severity": Severity.WARNING,
+                    "description": (
+                        f"Mild overfitting: CV score ({cv_mean:.4f}) slightly higher than "
+                        f"test score ({test_score:.4f}), gap = {gap:.4f}"
+                    ),
+                    "recommendation": "Monitor but may be acceptable",
+                }
+            )
 
         # Underfitting: both scores are low
         threshold = 0.5
         if cv_mean < threshold and test_score < threshold:
-            issues.append({
-                "type": "underfitting",
-                "severity": Severity.ERROR,
-                "description": (
-                    f"Possible underfitting: both CV ({cv_mean:.4f}) and test ({test_score:.4f}) "
-                    f"scores are below {threshold}"
-                ),
-                "recommendation": "Increase model complexity, add more features, or reduce regularization",
-            })
+            issues.append(
+                {
+                    "type": "underfitting",
+                    "severity": Severity.ERROR,
+                    "description": (
+                        f"Possible underfitting: both CV ({cv_mean:.4f}) and test ({test_score:.4f}) "
+                        f"scores are below {threshold}"
+                    ),
+                    "recommendation": "Increase model complexity, add more features, or reduce regularization",
+                }
+            )
 
         return issues
 
     def _check_vs_baseline(
-        self, metrics: dict[str, float], baseline: dict[str, float],
+        self,
+        metrics: dict[str, float],
+        baseline: dict[str, float],
         problem_type: ProblemType | None,
     ) -> list[dict[str, Any]]:
         """Check if the model meaningfully beats the baseline."""
         issues: list[dict[str, Any]] = []
 
-        if problem_type in (ProblemType.BINARY_CLASSIFICATION, ProblemType.MULTICLASS_CLASSIFICATION):
+        if problem_type in (
+            ProblemType.BINARY_CLASSIFICATION,
+            ProblemType.MULTICLASS_CLASSIFICATION,
+        ):
             model_acc = metrics.get("accuracy", 0)
             baseline_acc = baseline.get("baseline_accuracy", 0)
 
             if model_acc <= baseline_acc:
-                issues.append({
-                    "type": "below_baseline",
-                    "severity": Severity.CRITICAL,
-                    "description": (
-                        f"Model accuracy ({model_acc:.4f}) does not beat majority class "
-                        f"baseline ({baseline_acc:.4f})"
-                    ),
-                    "recommendation": "Model is not learning meaningful patterns — review features and data quality",
-                })
+                issues.append(
+                    {
+                        "type": "below_baseline",
+                        "severity": Severity.CRITICAL,
+                        "description": (
+                            f"Model accuracy ({model_acc:.4f}) does not beat majority class "
+                            f"baseline ({baseline_acc:.4f})"
+                        ),
+                        "recommendation": "Model is not learning meaningful patterns — review features and data quality",
+                    }
+                )
             elif model_acc - baseline_acc < 0.02:
-                issues.append({
-                    "type": "marginal_improvement",
-                    "severity": Severity.WARNING,
-                    "description": (
-                        f"Model barely beats baseline: {model_acc:.4f} vs {baseline_acc:.4f}"
-                    ),
-                    "recommendation": "Consider whether the model adds sufficient value over a simple rule",
-                })
+                issues.append(
+                    {
+                        "type": "marginal_improvement",
+                        "severity": Severity.WARNING,
+                        "description": (
+                            f"Model barely beats baseline: {model_acc:.4f} vs {baseline_acc:.4f}"
+                        ),
+                        "recommendation": "Consider whether the model adds sufficient value over a simple rule",
+                    }
+                )
 
         elif problem_type == ProblemType.REGRESSION:
             r2 = metrics.get("r2", 0)
             if r2 < 0:
-                issues.append({
-                    "type": "below_baseline",
-                    "severity": Severity.CRITICAL,
-                    "description": f"Negative R2 ({r2:.4f}) — model is worse than predicting the mean",
-                    "recommendation": "Fundamental modeling issue — review features and approach",
-                })
+                issues.append(
+                    {
+                        "type": "below_baseline",
+                        "severity": Severity.CRITICAL,
+                        "description": f"Negative R2 ({r2:.4f}) — model is worse than predicting the mean",
+                        "recommendation": "Fundamental modeling issue — review features and approach",
+                    }
+                )
 
         return issues
 
@@ -206,18 +233,20 @@ class DiagnosisAgent(BaseAgent):
 
             if not met:
                 direction = "below" if not lower_better else "above"
-                issues.append({
-                    "type": "success_criteria_not_met",
-                    "severity": Severity.ERROR,
-                    "description": (
-                        f"Success criterion not met: {metric_name} = {value:.4f}, "
-                        f"required {'<=' if lower_better else '>='} {threshold}"
-                    ),
-                    "recommendation": f"Optimize model to bring {metric_name} {direction} {threshold}",
-                    "metric": metric_name,
-                    "value": value,
-                    "threshold": threshold,
-                })
+                issues.append(
+                    {
+                        "type": "success_criteria_not_met",
+                        "severity": Severity.ERROR,
+                        "description": (
+                            f"Success criterion not met: {metric_name} = {value:.4f}, "
+                            f"required {'<=' if lower_better else '>='} {threshold}"
+                        ),
+                        "recommendation": f"Optimize model to bring {metric_name} {direction} {threshold}",
+                        "metric": metric_name,
+                        "value": value,
+                        "threshold": threshold,
+                    }
+                )
 
         return issues
 
@@ -230,15 +259,17 @@ class DiagnosisAgent(BaseAgent):
 
         # Large gap between accuracy and F1 suggests imbalance issues
         if accuracy > 0 and f1 > 0 and abs(accuracy - f1) > 0.1:
-            issues.append({
-                "type": "class_imbalance_effect",
-                "severity": Severity.WARNING,
-                "description": (
-                    f"Gap between accuracy ({accuracy:.4f}) and F1 ({f1:.4f}) suggests "
-                    f"class imbalance may be affecting results"
-                ),
-                "recommendation": "Consider class weights, SMOTE, or threshold tuning",
-            })
+            issues.append(
+                {
+                    "type": "class_imbalance_effect",
+                    "severity": Severity.WARNING,
+                    "description": (
+                        f"Gap between accuracy ({accuracy:.4f}) and F1 ({f1:.4f}) suggests "
+                        f"class imbalance may be affecting results"
+                    ),
+                    "recommendation": "Consider class weights, SMOTE, or threshold tuning",
+                }
+            )
 
         return issues
 
@@ -250,15 +281,17 @@ class DiagnosisAgent(BaseAgent):
         cv_mean = float(np.mean(cv_scores))
 
         if cv_mean > 0 and cv_std / cv_mean > 0.15:
-            issues.append({
-                "type": "high_cv_variance",
-                "severity": Severity.WARNING,
-                "description": (
-                    f"High CV variance: std/mean = {cv_std/cv_mean:.2f} "
-                    f"(mean={cv_mean:.4f}, std={cv_std:.4f})"
-                ),
-                "recommendation": "Model may be unstable — consider more robust models or more data",
-            })
+            issues.append(
+                {
+                    "type": "high_cv_variance",
+                    "severity": Severity.WARNING,
+                    "description": (
+                        f"High CV variance: std/mean = {cv_std / cv_mean:.2f} "
+                        f"(mean={cv_mean:.4f}, std={cv_std:.4f})"
+                    ),
+                    "recommendation": "Model may be unstable — consider more robust models or more data",
+                }
+            )
 
         return issues
 

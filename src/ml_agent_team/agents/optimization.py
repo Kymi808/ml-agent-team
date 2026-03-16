@@ -53,11 +53,13 @@ class OptimizationAgent(BaseAgent):
 
         # Increment optimization round
         self.state.optimization_rounds = round_num
-        self.state.optimization_history.append({
-            "round": round_num,
-            "issues_addressed": len(actions_taken),
-            "actions": actions_taken,
-        })
+        self.state.optimization_history.append(
+            {
+                "round": round_num,
+                "issues_addressed": len(actions_taken),
+                "actions": actions_taken,
+            }
+        )
 
         # Clear issues for next evaluation round
         self.state.issues = []
@@ -68,12 +70,14 @@ class OptimizationAgent(BaseAgent):
             actions_taken=len(actions_taken),
         )
 
-        return self._result_message({
-            "round": round_num,
-            "actions_taken": len(actions_taken),
-            "actions": actions_taken,
-            "will_retrain": len(actions_taken) > 0,
-        })
+        return self._result_message(
+            {
+                "round": round_num,
+                "actions_taken": len(actions_taken),
+                "actions": actions_taken,
+                "will_retrain": len(actions_taken) > 0,
+            }
+        )
 
     def _apply_fix(self, issue_type: str, issue: dict[str, Any]) -> dict[str, str] | None:
         """Apply a fix for a specific issue type. Returns description of action taken."""

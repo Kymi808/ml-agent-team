@@ -172,7 +172,9 @@ class LiteratureReviewAgent(BaseAgent):
             top_approaches=self.state.recommended_approaches,
         )
 
-        return self._result_message({
-            "findings_count": len(all_findings),
-            "recommended_approaches": self.state.recommended_approaches,
-        })
+        return self._result_message(
+            {
+                "findings_count": len(all_findings),
+                "recommended_approaches": self.state.recommended_approaches,
+            }
+        )

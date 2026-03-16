@@ -11,7 +11,7 @@ from ..core.config import AgentConfig, PipelineConfig
 from ..core.message_bus import MessageBus
 from ..core.messages import AgentMessage
 from ..core.pipeline import Pipeline, PipelineBuilder
-from ..core.types import MessageType, PipelineStage
+from ..core.types import MessageType
 from ..core.workflow_state import WorkflowState
 from .data_ingestion import DataIngestionAgent
 from .diagnosis import DiagnosisAgent
@@ -123,18 +123,26 @@ class OrchestratorAgent:
             ("literature_review", LiteratureReviewAgent, {}),
             ("data_ingestion", DataIngestionAgent, {}),
             ("eda", EDAAgent, {"output_dir": f"{output_dir}/eda"}),
-            ("feature_engineering", FeatureEngineeringAgent, {
-                "test_size": self.config.data.test_size,
-                "random_state": self.config.data.random_state,
-            }),
+            (
+                "feature_engineering",
+                FeatureEngineeringAgent,
+                {
+                    "test_size": self.config.data.test_size,
+                    "random_state": self.config.data.random_state,
+                },
+            ),
             ("model_selection", ModelSelectionAgent, {}),
             ("model_building", ModelBuildingAgent, {}),
-            ("training", TrainingAgent, {
-                "cv_folds": self.config.training.cross_validation_folds,
-                "hyperparameter_tuning": self.config.training.hyperparameter_tuning,
-                "tuning_iterations": self.config.training.tuning_trials,
-                "scoring_metric": self.config.training.scoring_metric,
-            }),
+            (
+                "training",
+                TrainingAgent,
+                {
+                    "cv_folds": self.config.training.cross_validation_folds,
+                    "hyperparameter_tuning": self.config.training.hyperparameter_tuning,
+                    "tuning_iterations": self.config.training.tuning_trials,
+                    "scoring_metric": self.config.training.scoring_metric,
+                },
+            ),
             ("evaluation", EvaluationAgent, {"output_dir": f"{output_dir}/evaluation"}),
             ("diagnosis", DiagnosisAgent, {}),
             ("optimization", OptimizationAgent, {}),

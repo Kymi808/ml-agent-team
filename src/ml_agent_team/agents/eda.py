@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 import matplotlib
+
 matplotlib.use("Agg")  # Non-interactive backend
 import matplotlib.pyplot as plt
 import numpy as np
@@ -91,17 +92,17 @@ class EDAAgent(BaseAgent):
             plots_generated=len(plots),
         )
 
-        return self._result_message({
-            "sections": list(report.keys()),
-            "plots_generated": len(plots),
-            "outlier_columns": len(report.get("outliers", {}).get("columns_with_outliers", [])),
-        })
+        return self._result_message(
+            {
+                "sections": list(report.keys()),
+                "plots_generated": len(plots),
+                "outlier_columns": len(report.get("outliers", {}).get("columns_with_outliers", [])),
+            }
+        )
 
     def _analyze_missing(self, df: pd.DataFrame, profile: Any) -> dict[str, Any]:
         """Analyze missing data patterns."""
-        missing = {
-            col: count for col, count in profile.missing_counts.items() if count > 0
-        }
+        missing = {col: count for col, count in profile.missing_counts.items() if count > 0}
         total_missing = sum(missing.values())
         total_cells = len(df) * len(df.columns)
 
@@ -261,8 +262,14 @@ class EDAAgent(BaseAgent):
         corr = df[cols].corr()
         fig, ax = plt.subplots(figsize=(max(8, len(cols) * 0.6), max(6, len(cols) * 0.5)))
         sns.heatmap(
-            corr, annot=len(cols) <= 12, fmt=".2f", cmap="RdBu_r",
-            center=0, ax=ax, square=True, linewidths=0.5,
+            corr,
+            annot=len(cols) <= 12,
+            fmt=".2f",
+            cmap="RdBu_r",
+            center=0,
+            ax=ax,
+            square=True,
+            linewidths=0.5,
         )
         ax.set_title("Feature Correlations")
         plt.tight_layout()

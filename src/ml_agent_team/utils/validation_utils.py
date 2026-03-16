@@ -16,9 +16,7 @@ def validate_dataframe(df: pd.DataFrame, min_rows: int = 1, min_cols: int = 2) -
     if len(df) < min_rows:
         raise DataValidationError(f"DataFrame has {len(df)} rows, minimum is {min_rows}")
     if len(df.columns) < min_cols:
-        raise DataValidationError(
-            f"DataFrame has {len(df.columns)} columns, minimum is {min_cols}"
-        )
+        raise DataValidationError(f"DataFrame has {len(df.columns)} columns, minimum is {min_cols}")
 
     # Check for duplicate columns
     dupes = df.columns[df.columns.duplicated()].tolist()
@@ -35,14 +33,10 @@ def validate_target_column(df: pd.DataFrame, target: str) -> None:
         raise DataValidationError(f"Target column '{target}' is entirely null")
 
     if df[target].nunique() < 2:
-        raise DataValidationError(
-            f"Target column '{target}' has fewer than 2 unique values"
-        )
+        raise DataValidationError(f"Target column '{target}' has fewer than 2 unique values")
 
 
-def check_data_leakage(
-    train_indices: Any, test_indices: Any
-) -> bool:
+def check_data_leakage(train_indices: Any, test_indices: Any) -> bool:
     """Check for overlap between train and test indices."""
     train_set = set(train_indices)
     test_set = set(test_indices)

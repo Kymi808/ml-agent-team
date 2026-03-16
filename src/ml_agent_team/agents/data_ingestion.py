@@ -13,7 +13,6 @@ from ..core.messages import AgentMessage
 from ..core.types import PipelineStage
 from ..core.workflow_state import DataProfile
 
-
 # Supported file loaders
 _LOADERS: dict[str, Any] = {
     ".csv": pd.read_csv,
@@ -73,13 +72,15 @@ class DataIngestionAgent(BaseAgent):
             target=self.state.problem.target_column,
         )
 
-        return self._result_message({
-            "rows": profile.n_rows,
-            "columns": profile.n_columns,
-            "numeric_columns": len(profile.numeric_columns),
-            "categorical_columns": len(profile.categorical_columns),
-            "missing_total": sum(profile.missing_counts.values()),
-        })
+        return self._result_message(
+            {
+                "rows": profile.n_rows,
+                "columns": profile.n_columns,
+                "numeric_columns": len(profile.numeric_columns),
+                "categorical_columns": len(profile.categorical_columns),
+                "missing_total": sum(profile.missing_counts.values()),
+            }
+        )
 
     def _load_data(self, source: str) -> pd.DataFrame:
         """Load data from a file path, auto-detecting format."""
@@ -91,8 +92,7 @@ class DataIngestionAgent(BaseAgent):
         loader = _LOADERS.get(suffix)
         if loader is None:
             raise DataValidationError(
-                f"Unsupported file format: {suffix}. "
-                f"Supported: {', '.join(_LOADERS.keys())}"
+                f"Unsupported file format: {suffix}. Supported: {', '.join(_LOADERS.keys())}"
             )
 
         try:
@@ -118,10 +118,7 @@ class DataIngestionAgent(BaseAgent):
         numeric_cols = df.select_dtypes(include=["number"]).columns.tolist()
         categorical_cols = df.select_dtypes(include=["object", "category"]).columns.tolist()
         datetime_cols = df.select_dtypes(include=["datetime64"]).columns.tolist()
-        text_cols = [
-            c for c in categorical_cols
-            if df[c].dropna().str.len().mean() > 50
-        ]
+        text_cols = [c for c in categorical_cols if df[c].dropna().str.len().mean() > 50]
         # Remove text columns from categorical
         categorical_cols = [c for c in categorical_cols if c not in text_cols]
 
@@ -134,8 +131,7 @@ class DataIngestionAgent(BaseAgent):
         if numeric_cols:
             desc = df[numeric_cols].describe().to_dict()
             summary_stats = {
-                col: {str(k): float(v) for k, v in stats.items()}
-                for col, stats in desc.items()
+                col: {str(k): float(v) for k, v in stats.items()} for col, stats in desc.items()
             }
 
         return DataProfile(
@@ -155,8 +151,17 @@ class DataIngestionAgent(BaseAgent):
     def _guess_target_column(self, df: pd.DataFrame) -> str | None:
         """Heuristic to guess the target column if not specified."""
         common_target_names = [
-            "target", "label", "class", "y", "outcome", "response",
-            "is_", "has_", "churned", "default", "fraud",
+            "target",
+            "label",
+            "class",
+            "y",
+            "outcome",
+            "response",
+            "is_",
+            "has_",
+            "churned",
+            "default",
+            "fraud",
         ]
         for col in df.columns:
             col_lower = col.lower()

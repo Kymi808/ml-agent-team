@@ -6,10 +6,10 @@ from pathlib import Path
 from typing import Any
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from sklearn import metrics as sklearn_metrics
 
 from ..core.base_agent import BaseAgent
@@ -59,7 +59,10 @@ class EvaluationAgent(BaseAgent):
         # Generate plots
         plots: list[str] = []
 
-        if problem_type in (ProblemType.BINARY_CLASSIFICATION, ProblemType.MULTICLASS_CLASSIFICATION):
+        if problem_type in (
+            ProblemType.BINARY_CLASSIFICATION,
+            ProblemType.MULTICLASS_CLASSIFICATION,
+        ):
             # Confusion matrix
             cm = sklearn_metrics.confusion_matrix(y_test, y_pred)
             self.state.confusion_matrix = cm
@@ -71,7 +74,9 @@ class EvaluationAgent(BaseAgent):
             self.state.classification_report = sklearn_metrics.classification_report(y_test, y_pred)
 
             # ROC curve (binary only)
-            if problem_type == ProblemType.BINARY_CLASSIFICATION and hasattr(model, "predict_proba"):
+            if problem_type == ProblemType.BINARY_CLASSIFICATION and hasattr(
+                model, "predict_proba"
+            ):
                 roc_path = self._plot_roc_curve(model, X_test, y_test, output_dir)
                 if roc_path:
                     plots.append(roc_path)
@@ -107,21 +112,30 @@ class EvaluationAgent(BaseAgent):
             meets_criteria=meets_criteria,
         )
 
-        return self._result_message({
-            "metrics": eval_metrics,
-            "baseline_metrics": baseline,
-            "meets_success_criteria": meets_criteria,
-            "plots_generated": len(plots),
-        })
+        return self._result_message(
+            {
+                "metrics": eval_metrics,
+                "baseline_metrics": baseline,
+                "meets_success_criteria": meets_criteria,
+                "plots_generated": len(plots),
+            }
+        )
 
     def _compute_metrics(
-        self, y_test: Any, y_pred: Any, model: Any, X_test: Any,
+        self,
+        y_test: Any,
+        y_pred: Any,
+        model: Any,
+        X_test: Any,
         problem_type: ProblemType | None,
     ) -> dict[str, float]:
         """Compute evaluation metrics based on problem type."""
         result: dict[str, float] = {}
 
-        if problem_type in (ProblemType.BINARY_CLASSIFICATION, ProblemType.MULTICLASS_CLASSIFICATION):
+        if problem_type in (
+            ProblemType.BINARY_CLASSIFICATION,
+            ProblemType.MULTICLASS_CLASSIFICATION,
+        ):
             result["accuracy"] = float(sklearn_metrics.accuracy_score(y_test, y_pred))
             result["f1_weighted"] = float(
                 sklearn_metrics.f1_score(y_test, y_pred, average="weighted", zero_division=0)
@@ -151,7 +165,11 @@ class EvaluationAgent(BaseAgent):
             nonzero = y_test_arr != 0
             if nonzero.any():
                 result["mape"] = float(
-                    np.mean(np.abs((y_test_arr[nonzero] - np.array(y_pred)[nonzero]) / y_test_arr[nonzero]))
+                    np.mean(
+                        np.abs(
+                            (y_test_arr[nonzero] - np.array(y_pred)[nonzero]) / y_test_arr[nonzero]
+                        )
+                    )
                 )
 
         return {k: round(v, 4) for k, v in result.items()}
@@ -161,17 +179,25 @@ class EvaluationAgent(BaseAgent):
         result: dict[str, float] = {}
         y_arr = np.array(y_test)
 
-        if problem_type in (ProblemType.BINARY_CLASSIFICATION, ProblemType.MULTICLASS_CLASSIFICATION):
+        if problem_type in (
+            ProblemType.BINARY_CLASSIFICATION,
+            ProblemType.MULTICLASS_CLASSIFICATION,
+        ):
             # Majority class baseline
             from collections import Counter
+
             most_common = Counter(y_arr).most_common(1)[0][0]
             baseline_pred = np.full_like(y_arr, most_common)
-            result["baseline_accuracy"] = float(sklearn_metrics.accuracy_score(y_arr, baseline_pred))
+            result["baseline_accuracy"] = float(
+                sklearn_metrics.accuracy_score(y_arr, baseline_pred)
+            )
 
         elif problem_type == ProblemType.REGRESSION:
             # Mean predictor baseline
             mean_pred = np.full_like(y_arr, y_arr.mean(), dtype=float)
-            result["baseline_rmse"] = float(np.sqrt(sklearn_metrics.mean_squared_error(y_arr, mean_pred)))
+            result["baseline_rmse"] = float(
+                np.sqrt(sklearn_metrics.mean_squared_error(y_arr, mean_pred))
+            )
             result["baseline_r2"] = 0.0  # By definition
 
         return {k: round(v, 4) for k, v in result.items()}

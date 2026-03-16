@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
@@ -65,15 +64,15 @@ class FeatureEngineeringAgent(BaseAgent):
             test_size=len(self.state.X_test),
         )
 
-        return self._result_message({
-            "n_features": len(feature_names),
-            "train_size": len(self.state.X_train),
-            "test_size": len(self.state.X_test),
-            "imputed_columns": sum(
-                1 for v in profile.missing_counts.values() if v > 0
-            ),
-            "encoded_columns": len(encoding_maps),
-        })
+        return self._result_message(
+            {
+                "n_features": len(feature_names),
+                "train_size": len(self.state.X_train),
+                "test_size": len(self.state.X_test),
+                "imputed_columns": sum(1 for v in profile.missing_counts.values() if v > 0),
+                "encoded_columns": len(encoding_maps),
+            }
+        )
 
     def _impute_missing(self, df: pd.DataFrame, profile: Any) -> pd.DataFrame:
         """Impute missing values based on column type."""
@@ -88,7 +87,9 @@ class FeatureEngineeringAgent(BaseAgent):
 
         for col in profile.categorical_columns:
             if df[col].isnull().any():
-                df[col] = df[col].fillna(df[col].mode().iloc[0] if not df[col].mode().empty else "unknown")
+                df[col] = df[col].fillna(
+                    df[col].mode().iloc[0] if not df[col].mode().empty else "unknown"
+                )
 
         return df
 
@@ -97,9 +98,7 @@ class FeatureEngineeringAgent(BaseAgent):
     ) -> tuple[pd.DataFrame, dict[str, dict[str, int]]]:
         """Encode categorical variables."""
         encoding_maps: dict[str, dict[str, int]] = {}
-        cols_to_encode = [
-            c for c in profile.categorical_columns if c != target
-        ]
+        cols_to_encode = [c for c in profile.categorical_columns if c != target]
 
         for col in cols_to_encode:
             n_unique = df[col].nunique()
@@ -108,9 +107,7 @@ class FeatureEngineeringAgent(BaseAgent):
                 # Binary: label encode
                 le = LabelEncoder()
                 df[col] = le.fit_transform(df[col].astype(str))
-                encoding_maps[col] = {
-                    str(cls): int(i) for i, cls in enumerate(le.classes_)
-                }
+                encoding_maps[col] = {str(cls): int(i) for i, cls in enumerate(le.classes_)}
             elif n_unique <= 10:
                 # Low cardinality: one-hot encode
                 dummies = pd.get_dummies(df[col], prefix=col, drop_first=True)
@@ -119,17 +116,13 @@ class FeatureEngineeringAgent(BaseAgent):
                 # High cardinality: label encode (could use target encoding in production)
                 le = LabelEncoder()
                 df[col] = le.fit_transform(df[col].astype(str))
-                encoding_maps[col] = {
-                    str(cls): int(i) for i, cls in enumerate(le.classes_)
-                }
+                encoding_maps[col] = {str(cls): int(i) for i, cls in enumerate(le.classes_)}
 
         # Encode target if categorical
         if target and target in df.columns and df[target].dtype == "object":
             le = LabelEncoder()
             df[target] = le.fit_transform(df[target].astype(str))
-            encoding_maps[target] = {
-                str(cls): int(i) for i, cls in enumerate(le.classes_)
-            }
+            encoding_maps[target] = {str(cls): int(i) for i, cls in enumerate(le.classes_)}
 
         return df, encoding_maps
 
@@ -165,12 +158,12 @@ class FeatureEngineeringAgent(BaseAgent):
         # Use stratification for classification problems
         stratify = None
         problem_type = self.state.problem.problem_type
-        if problem_type in (
+        is_classification = problem_type in (
             ProblemType.BINARY_CLASSIFICATION,
             ProblemType.MULTICLASS_CLASSIFICATION,
-        ):
-            if y.nunique() <= 50:  # Only stratify if reasonable number of classes
-                stratify = y
+        )
+        if is_classification and y.nunique() <= 50:
+            stratify = y
 
         self.state.X_train, self.state.X_test, self.state.y_train, self.state.y_test = (
             train_test_split(

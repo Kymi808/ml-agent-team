@@ -3,43 +3,90 @@
 from __future__ import annotations
 
 import re
-from typing import Any
 
 from ..core.base_agent import BaseAgent
 from ..core.messages import AgentMessage
 from ..core.types import PipelineStage, ProblemType
 
-
 # Keyword-based heuristics for problem type detection
 _PROBLEM_KEYWORDS: dict[ProblemType, list[str]] = {
     ProblemType.BINARY_CLASSIFICATION: [
-        "classify", "classification", "binary", "predict whether", "yes or no",
-        "true or false", "spam", "fraud", "churn", "default", "positive or negative",
-        "detect", "diagnosis",
+        "classify",
+        "classification",
+        "binary",
+        "predict whether",
+        "yes or no",
+        "true or false",
+        "spam",
+        "fraud",
+        "churn",
+        "default",
+        "positive or negative",
+        "detect",
+        "diagnosis",
     ],
     ProblemType.MULTICLASS_CLASSIFICATION: [
-        "multiclass", "multi-class", "categorize", "categories", "classify into",
-        "multiple classes", "species", "types of",
+        "multiclass",
+        "multi-class",
+        "categorize",
+        "categories",
+        "classify into",
+        "multiple classes",
+        "species",
+        "types of",
     ],
     ProblemType.REGRESSION: [
-        "predict", "forecast", "regression", "how much", "price", "cost", "value",
-        "continuous", "estimate", "amount", "score", "rating", "salary", "revenue",
+        "predict",
+        "forecast",
+        "regression",
+        "how much",
+        "price",
+        "cost",
+        "value",
+        "continuous",
+        "estimate",
+        "amount",
+        "score",
+        "rating",
+        "salary",
+        "revenue",
     ],
     ProblemType.CLUSTERING: [
-        "cluster", "segment", "group", "unsupervised", "similarity", "cohort",
+        "cluster",
+        "segment",
+        "group",
+        "unsupervised",
+        "similarity",
+        "cohort",
     ],
     ProblemType.TIME_SERIES: [
-        "time series", "temporal", "forecast", "trend", "seasonal", "stock",
+        "time series",
+        "temporal",
+        "forecast",
+        "trend",
+        "seasonal",
+        "stock",
         "demand forecast",
     ],
     ProblemType.ANOMALY_DETECTION: [
-        "anomaly", "outlier detection", "novelty", "abnormal", "rare event",
+        "anomaly",
+        "outlier detection",
+        "novelty",
+        "abnormal",
+        "rare event",
     ],
     ProblemType.RANKING: [
-        "rank", "ranking", "order", "relevance", "search",
+        "rank",
+        "ranking",
+        "order",
+        "relevance",
+        "search",
     ],
     ProblemType.RECOMMENDATION: [
-        "recommend", "recommendation", "suggest", "collaborative filtering",
+        "recommend",
+        "recommendation",
+        "suggest",
+        "collaborative filtering",
     ],
 }
 
@@ -86,12 +133,14 @@ class ProblemAnalysisAgent(BaseAgent):
             domain=self.state.problem.domain,
         )
 
-        return self._result_message({
-            "problem_type": problem_type.value,
-            "objectives": self.state.problem.objectives,
-            "success_criteria": self.state.problem.success_criteria,
-            "domain": self.state.problem.domain,
-        })
+        return self._result_message(
+            {
+                "problem_type": problem_type.value,
+                "objectives": self.state.problem.objectives,
+                "success_criteria": self.state.problem.success_criteria,
+                "domain": self.state.problem.domain,
+            }
+        )
 
     def _detect_problem_type(self, description: str) -> ProblemType:
         """Detect the ML problem type using keyword matching."""

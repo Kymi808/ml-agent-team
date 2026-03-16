@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import structlog
-from typing import Callable
 
 from .base_agent import BaseAgent
 from .message_bus import MessageBus

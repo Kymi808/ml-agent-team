@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
 
 from ..core.base_agent import BaseAgent
 from ..core.messages import AgentMessage
@@ -80,11 +79,13 @@ class ReportingAgent(BaseAgent):
 
         self.logger.info("report_generated", path=str(report_path))
 
-        return self._result_message({
-            "report_path": str(report_path),
-            "sections": len(sections),
-            "length_chars": len(report_content),
-        })
+        return self._result_message(
+            {
+                "report_path": str(report_path),
+                "sections": len(sections),
+                "length_chars": len(report_content),
+            }
+        )
 
     def _section_title(self) -> str:
         ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
@@ -140,8 +141,8 @@ class ReportingAgent(BaseAgent):
         dp = self.state.data_profile
         lines = [
             "## Data Overview\n",
-            f"| Property | Value |",
-            f"|----------|-------|",
+            "| Property | Value |",
+            "|----------|-------|",
             f"| Rows | {dp.n_rows:,} |",
             f"| Columns | {dp.n_columns} |",
             f"| Numeric Features | {len(dp.numeric_columns)} |",
@@ -174,8 +175,7 @@ class ReportingAgent(BaseAgent):
             for col in outlier_cols[:5]:
                 detail = outliers.get("details", {}).get(col, {})
                 lines.append(
-                    f"- {col}: {detail.get('count', 0)} outliers "
-                    f"({detail.get('percentage', 0)}%)"
+                    f"- {col}: {detail.get('count', 0)} outliers ({detail.get('percentage', 0)}%)"
                 )
 
         # Target analysis
@@ -309,8 +309,7 @@ class ReportingAgent(BaseAgent):
             lines.append("4. Document model for stakeholder review")
         else:
             lines.append(
-                "The model **does not meet** all success criteria. "
-                "Further work is recommended.\n"
+                "The model **does not meet** all success criteria. Further work is recommended.\n"
             )
             lines.append("### Areas for Improvement\n")
             for issue in self.state.issues:
@@ -335,7 +334,7 @@ class ReportingAgent(BaseAgent):
             for i, path in enumerate(all_plots, 1):
                 lines.append(f"{i}. `{path}`")
 
-        lines.append(f"\n### Pipeline Stages Completed\n")
+        lines.append("\n### Pipeline Stages Completed\n")
         for stage in self.state.completed_stages:
             lines.append(f"- {stage}")
 

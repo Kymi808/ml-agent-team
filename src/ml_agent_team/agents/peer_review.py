@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-import numpy as np
-
 from ..core.base_agent import BaseAgent
 from ..core.messages import AgentMessage
 from ..core.types import PipelineStage, Severity
@@ -72,16 +70,18 @@ class PeerReviewAgent(BaseAgent):
             approved=approved,
         )
 
-        return self._result_message({
-            "approved": approved,
-            "total_findings": len(findings),
-            "critical": len(critical),
-            "errors": len(errors),
-            "findings": [
-                {"severity": f["severity"], "category": f["category"], "message": f["message"]}
-                for f in findings
-            ],
-        })
+        return self._result_message(
+            {
+                "approved": approved,
+                "total_findings": len(findings),
+                "critical": len(critical),
+                "errors": len(errors),
+                "findings": [
+                    {"severity": f["severity"], "category": f["category"], "message": f["message"]}
+                    for f in findings
+                ],
+            }
+        )
 
     def _review_data_handling(self) -> list[dict[str, Any]]:
         """Review data ingestion and preprocessing."""
@@ -90,39 +90,45 @@ class PeerReviewAgent(BaseAgent):
 
         # Check for very small dataset
         if profile.n_rows < 100:
-            findings.append({
-                "severity": Severity.WARNING,
-                "category": "data",
-                "message": (
-                    f"Very small dataset ({profile.n_rows} rows). "
-                    f"Results may not be statistically reliable."
-                ),
-                "recommendation": "Collect more data or use leave-one-out cross-validation",
-            })
+            findings.append(
+                {
+                    "severity": Severity.WARNING,
+                    "category": "data",
+                    "message": (
+                        f"Very small dataset ({profile.n_rows} rows). "
+                        f"Results may not be statistically reliable."
+                    ),
+                    "recommendation": "Collect more data or use leave-one-out cross-validation",
+                }
+            )
 
         # Check for high missing rate
         total_cells = profile.n_rows * profile.n_columns
         total_missing = sum(profile.missing_counts.values())
         if total_cells > 0 and total_missing / total_cells > 0.3:
-            findings.append({
-                "severity": Severity.WARNING,
-                "category": "data",
-                "message": (
-                    f"High missing data rate ({total_missing/total_cells*100:.1f}%). "
-                    f"Imputation may introduce significant bias."
-                ),
-                "recommendation": "Verify imputation strategy does not distort distributions",
-            })
+            findings.append(
+                {
+                    "severity": Severity.WARNING,
+                    "category": "data",
+                    "message": (
+                        f"High missing data rate ({total_missing / total_cells * 100:.1f}%). "
+                        f"Imputation may introduce significant bias."
+                    ),
+                    "recommendation": "Verify imputation strategy does not distort distributions",
+                }
+            )
 
         # Check for very high cardinality categoricals
         for col, count in profile.unique_counts.items():
             if col in profile.categorical_columns and count > 100:
-                findings.append({
-                    "severity": Severity.INFO,
-                    "category": "data",
-                    "message": f"High cardinality categorical: {col} ({count} unique values)",
-                    "recommendation": "Consider target encoding or grouping rare categories",
-                })
+                findings.append(
+                    {
+                        "severity": Severity.INFO,
+                        "category": "data",
+                        "message": f"High cardinality categorical: {col} ({count} unique values)",
+                        "recommendation": "Consider target encoding or grouping rare categories",
+                    }
+                )
 
         return findings
 
@@ -139,15 +145,17 @@ class PeerReviewAgent(BaseAgent):
                     if col == target:
                         continue
                     if abs(corr) > 0.95:
-                        findings.append({
-                            "severity": Severity.CRITICAL,
-                            "category": "data_leakage",
-                            "message": (
-                                f"Suspected data leakage: feature '{col}' has "
-                                f"correlation {corr:.4f} with target"
-                            ),
-                            "recommendation": "Remove this feature — it may be a proxy for the target",
-                        })
+                        findings.append(
+                            {
+                                "severity": Severity.CRITICAL,
+                                "category": "data_leakage",
+                                "message": (
+                                    f"Suspected data leakage: feature '{col}' has "
+                                    f"correlation {corr:.4f} with target"
+                                ),
+                                "recommendation": "Remove this feature — it may be a proxy for the target",
+                            }
+                        )
 
         # Check train/test sizes
         if self.state.X_train is not None and self.state.X_test is not None:
@@ -156,27 +164,31 @@ class PeerReviewAgent(BaseAgent):
             ratio = test_size / (train_size + test_size) if (train_size + test_size) > 0 else 0
 
             if ratio < 0.1:
-                findings.append({
-                    "severity": Severity.WARNING,
-                    "category": "methodology",
-                    "message": f"Test set is very small ({ratio:.1%} of data, {test_size} samples)",
-                    "recommendation": "Consider increasing test_size or using cross-validation only",
-                })
+                findings.append(
+                    {
+                        "severity": Severity.WARNING,
+                        "category": "methodology",
+                        "message": f"Test set is very small ({ratio:.1%} of data, {test_size} samples)",
+                        "recommendation": "Consider increasing test_size or using cross-validation only",
+                    }
+                )
 
         # Check feature count vs sample count
         if self.state.X_train is not None:
             n_features = self.state.X_train.shape[1] if hasattr(self.state.X_train, "shape") else 0
             n_samples = len(self.state.X_train)
             if n_features > 0 and n_samples / n_features < 10:
-                findings.append({
-                    "severity": Severity.WARNING,
-                    "category": "methodology",
-                    "message": (
-                        f"Low sample-to-feature ratio ({n_samples}/{n_features} = "
-                        f"{n_samples/n_features:.1f}). Risk of overfitting."
-                    ),
-                    "recommendation": "Apply dimensionality reduction or feature selection",
-                })
+                findings.append(
+                    {
+                        "severity": Severity.WARNING,
+                        "category": "methodology",
+                        "message": (
+                            f"Low sample-to-feature ratio ({n_samples}/{n_features} = "
+                            f"{n_samples / n_features:.1f}). Risk of overfitting."
+                        ),
+                        "recommendation": "Apply dimensionality reduction or feature selection",
+                    }
+                )
 
         return findings
 
@@ -187,23 +199,27 @@ class PeerReviewAgent(BaseAgent):
         # Check if cross-validation was used
         cv_scores = self.state.cross_validation_scores
         if not cv_scores:
-            findings.append({
-                "severity": Severity.WARNING,
-                "category": "methodology",
-                "message": "No cross-validation scores recorded",
-                "recommendation": "Always use cross-validation for reliable performance estimates",
-            })
+            findings.append(
+                {
+                    "severity": Severity.WARNING,
+                    "category": "methodology",
+                    "message": "No cross-validation scores recorded",
+                    "recommendation": "Always use cross-validation for reliable performance estimates",
+                }
+            )
 
         # Check if only one model was tried
         history = self.state.training_history
         results = history.get("results", [])
         if len(results) < 2:
-            findings.append({
-                "severity": Severity.INFO,
-                "category": "methodology",
-                "message": "Only one model was evaluated",
-                "recommendation": "Compare at least 2-3 model types for robust selection",
-            })
+            findings.append(
+                {
+                    "severity": Severity.INFO,
+                    "category": "methodology",
+                    "message": "Only one model was evaluated",
+                    "recommendation": "Compare at least 2-3 model types for robust selection",
+                }
+            )
 
         return findings
 
@@ -214,25 +230,29 @@ class PeerReviewAgent(BaseAgent):
 
         # Check that appropriate metrics were computed
         if not metrics:
-            findings.append({
-                "severity": Severity.ERROR,
-                "category": "evaluation",
-                "message": "No evaluation metrics were computed",
-                "recommendation": "Compute at least accuracy/F1 or R2/RMSE depending on problem type",
-            })
+            findings.append(
+                {
+                    "severity": Severity.ERROR,
+                    "category": "evaluation",
+                    "message": "No evaluation metrics were computed",
+                    "recommendation": "Compute at least accuracy/F1 or R2/RMSE depending on problem type",
+                }
+            )
 
         # Check for suspiciously perfect scores
         for metric_name, value in metrics.items():
             if metric_name in ("accuracy", "f1", "auc_roc", "r2", "f1_weighted") and value >= 0.999:
-                findings.append({
-                    "severity": Severity.CRITICAL,
-                    "category": "data_leakage",
-                    "message": (
-                        f"Suspiciously perfect {metric_name} = {value:.4f}. "
-                        f"This strongly suggests data leakage."
-                    ),
-                    "recommendation": "Check for target leakage, duplicate rows in train/test, or look-ahead bias",
-                })
+                findings.append(
+                    {
+                        "severity": Severity.CRITICAL,
+                        "category": "data_leakage",
+                        "message": (
+                            f"Suspiciously perfect {metric_name} = {value:.4f}. "
+                            f"This strongly suggests data leakage."
+                        ),
+                        "recommendation": "Check for target leakage, duplicate rows in train/test, or look-ahead bias",
+                    }
+                )
 
         return findings
 
@@ -242,21 +262,25 @@ class PeerReviewAgent(BaseAgent):
 
         # Check if baseline was computed
         if not self.state.baseline_metrics:
-            findings.append({
-                "severity": Severity.INFO,
-                "category": "methodology",
-                "message": "No baseline metrics computed for comparison",
-                "recommendation": "Always compare against a naive baseline",
-            })
+            findings.append(
+                {
+                    "severity": Severity.INFO,
+                    "category": "methodology",
+                    "message": "No baseline metrics computed for comparison",
+                    "recommendation": "Always compare against a naive baseline",
+                }
+            )
 
         # Check reproducibility
         model = self.state.trained_model
         if model and hasattr(model, "random_state") and model.random_state is None:
-            findings.append({
-                "severity": Severity.WARNING,
-                "category": "reproducibility",
-                "message": "Model does not have a fixed random_state",
-                "recommendation": "Set random_state for reproducible results",
-            })
+            findings.append(
+                {
+                    "severity": Severity.WARNING,
+                    "category": "reproducibility",
+                    "message": "Model does not have a fixed random_state",
+                    "recommendation": "Set random_state for reproducible results",
+                }
+            )
 
         return findings

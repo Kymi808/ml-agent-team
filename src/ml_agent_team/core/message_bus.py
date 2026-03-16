@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections import defaultdict
-from typing import Awaitable, Callable
+from collections.abc import Awaitable, Callable
 
 from .messages import AgentMessage
 from .types import MessageType
@@ -41,9 +41,7 @@ class MessageBus:
                 try:
                     await handler(message)
                 except Exception:
-                    logger.exception(
-                        "Handler error for agent %s", message.target_agent
-                    )
+                    logger.exception("Handler error for agent %s", message.target_agent)
 
         # Deliver to topic subscribers
         if message.type in self._topic_subscribers:
@@ -83,9 +81,7 @@ class MessageBus:
 
         if agent_name:
             messages = [
-                m
-                for m in messages
-                if m.source_agent == agent_name or m.target_agent == agent_name
+                m for m in messages if m.source_agent == agent_name or m.target_agent == agent_name
             ]
 
         if message_type:

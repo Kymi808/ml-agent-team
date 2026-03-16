@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-import numpy as np
 import pandas as pd
 
 
@@ -25,7 +24,7 @@ def detect_column_types(df: pd.DataFrame) -> dict[str, str]:
                 types[col] = "categorical"
             else:
                 types[col] = "numeric"
-        elif pd.api.types.is_string_dtype(dtype) or dtype == object:
+        elif pd.api.types.is_string_dtype(dtype) or dtype is object:
             avg_len = df[col].dropna().astype(str).str.len().mean()
             n_unique = df[col].nunique()
             if avg_len > 50:

@@ -14,10 +14,19 @@ def get_metrics_for_problem_type(problem_type: ProblemType) -> list[str]:
     """Return the list of appropriate metric names for a problem type."""
     mapping: dict[ProblemType, list[str]] = {
         ProblemType.BINARY_CLASSIFICATION: [
-            "accuracy", "precision", "recall", "f1", "auc_roc", "log_loss",
+            "accuracy",
+            "precision",
+            "recall",
+            "f1",
+            "auc_roc",
+            "log_loss",
         ],
         ProblemType.MULTICLASS_CLASSIFICATION: [
-            "accuracy", "f1_macro", "f1_weighted", "precision_weighted", "recall_weighted",
+            "accuracy",
+            "f1_macro",
+            "f1_weighted",
+            "precision_weighted",
+            "recall_weighted",
         ],
         ProblemType.REGRESSION: ["r2", "rmse", "mae", "mape"],
         ProblemType.CLUSTERING: ["silhouette_score", "calinski_harabasz"],

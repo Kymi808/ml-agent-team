@@ -22,22 +22,22 @@ class LLMProvider:
 
         api_key = os.environ.get(self.config.api_key_env)
         if not api_key:
-            raise EnvironmentError(
-                f"API key not found. Set {self.config.api_key_env} environment variable."
-            )
+            raise OSError(f"API key not found. Set {self.config.api_key_env} environment variable.")
 
         if self.config.provider == "anthropic":
             try:
                 import anthropic
+
                 self._client = anthropic.Anthropic(api_key=api_key)
-            except ImportError:
-                raise ImportError("Install anthropic: pip install ml-agent-team[llm]")
+            except ImportError as e:
+                raise ImportError("Install anthropic: pip install ml-agent-team[llm]") from e
         elif self.config.provider == "openai":
             try:
                 import openai
+
                 self._client = openai.OpenAI(api_key=api_key)
-            except ImportError:
-                raise ImportError("Install openai: pip install ml-agent-team[llm]")
+            except ImportError as e:
+                raise ImportError("Install openai: pip install ml-agent-team[llm]") from e
         else:
             raise ValueError(f"Unsupported LLM provider: {self.config.provider}")
 

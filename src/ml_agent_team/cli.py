@@ -52,7 +52,7 @@ def run(
         console.print(f"[red]Error:[/red] Data file not found: {data}")
         raise typer.Exit(1)
 
-    console.print(f"\n[bold]ML Agent Team Pipeline[/bold]")
+    console.print("\n[bold]ML Agent Team Pipeline[/bold]")
     console.print(f"Problem: {problem}")
     console.print(f"Data: {data}")
     console.print(f"Output: {output}\n")
@@ -85,7 +85,7 @@ def run(
 
     except Exception as e:
         console.print(f"\n[red]Pipeline failed:[/red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @app.command()

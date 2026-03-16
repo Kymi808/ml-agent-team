@@ -8,7 +8,6 @@ from ..core.base_agent import BaseAgent
 from ..core.messages import AgentMessage
 from ..core.types import PipelineStage, ProblemType
 
-
 # Model candidates organized by problem type
 _MODEL_CATALOG: dict[ProblemType, list[dict[str, Any]]] = {
     ProblemType.BINARY_CLASSIFICATION: [
@@ -175,7 +174,9 @@ class ModelSelectionAgent(BaseAgent):
         )
 
         # Get base candidates for this problem type
-        candidates = _MODEL_CATALOG.get(problem_type, _MODEL_CATALOG[ProblemType.BINARY_CLASSIFICATION])
+        candidates = _MODEL_CATALOG.get(
+            problem_type, _MODEL_CATALOG[ProblemType.BINARY_CLASSIFICATION]
+        )
         candidates = [dict(c) for c in candidates]  # Copy to avoid mutating catalog
 
         # Filter based on data size
@@ -195,10 +196,12 @@ class ModelSelectionAgent(BaseAgent):
             candidates=[c["name"] for c in candidates],
         )
 
-        return self._result_message({
-            "candidates": [c["name"] for c in candidates],
-            "rationale": rationale,
-        })
+        return self._result_message(
+            {
+                "candidates": [c["name"] for c in candidates],
+                "rationale": rationale,
+            }
+        )
 
     def _filter_by_data_size(
         self, candidates: list[dict[str, Any]], n_samples: int, n_features: int

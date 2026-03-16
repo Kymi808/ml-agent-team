@@ -69,6 +69,23 @@ src = ["src"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "UP", "B", "SIM"]
+ignore = [
+    "E501",   # Line too long — handled by formatter
+    "N806",   # Variable in function should be lowercase (X_train is ML convention)
+    "N803",   # Argument name should be lowercase (X_train is ML convention)
+    "B008",   # Function call in default argument (required by typer)
+    "B027",   # Empty method in ABC without abstract decorator (intentional optional hooks)
+    "SIM102", # Nested if — sometimes clearer than combined condition
+    "SIM108", # Use ternary operator — readability preference
+    "UP007",  # Use X | Y for union types — not available in all 3.10 contexts
+    "F811",   # Redefinition of unused name from line N — false positives with overloads
+]
+
+[tool.ruff.lint.per-file-ignores]
+"src/ml_agent_team/cli.py" = ["B008"]
+
+[tool.ruff.format]
+line-ending = "auto"
 
 [tool.mypy]
 python_version = "3.10"

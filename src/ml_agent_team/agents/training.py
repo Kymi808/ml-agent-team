@@ -85,8 +85,13 @@ class TrainingAgent(BaseAgent):
                 if do_tuning and model_name in hp_spaces and hp_spaces[model_name]:
                     # Hyperparameter tuning with RandomizedSearchCV
                     trained_model, cv_scores, best_params = self._tune_model(
-                        model, X_train, y_train, hp_spaces[model_name],
-                        scoring, cv_folds, tuning_iters,
+                        model,
+                        X_train,
+                        y_train,
+                        hp_spaces[model_name],
+                        scoring,
+                        cv_folds,
+                        tuning_iters,
                     )
                 else:
                     # Train with default params and cross-validate
@@ -132,13 +137,9 @@ class TrainingAgent(BaseAgent):
         self.state.trained_model = best["model"]
         self.state.best_model_name = best["name"]
         self.state.hyperparameters = best["best_params"]
-        self.state.cross_validation_scores = {
-            r["name"]: r["cv_scores"] for r in results
-        }
+        self.state.cross_validation_scores = {r["name"]: r["cv_scores"] for r in results}
         self.state.training_history = {
-            "results": [
-                {k: v for k, v in r.items() if k != "model"} for r in results
-            ],
+            "results": [{k: v for k, v in r.items() if k != "model"} for r in results],
             "best_model": best["name"],
             "scoring_metric": scoring,
         }
@@ -149,16 +150,17 @@ class TrainingAgent(BaseAgent):
             best_cv_score=best["cv_mean"],
         )
 
-        return self._result_message({
-            "best_model": best["name"],
-            "best_cv_mean": round(best["cv_mean"], 4),
-            "best_cv_std": round(best["cv_std"], 4),
-            "models_trained": len(results),
-            "all_results": [
-                {"name": r["name"], "cv_mean": round(r["cv_mean"], 4)}
-                for r in results
-            ],
-        })
+        return self._result_message(
+            {
+                "best_model": best["name"],
+                "best_cv_mean": round(best["cv_mean"], 4),
+                "best_cv_std": round(best["cv_std"], 4),
+                "models_trained": len(results),
+                "all_results": [
+                    {"name": r["name"], "cv_mean": round(r["cv_mean"], 4)} for r in results
+                ],
+            }
+        )
 
     def _get_scoring_metric(self, problem_type: ProblemType | None) -> str:
         """Determine the scoring metric based on problem type."""

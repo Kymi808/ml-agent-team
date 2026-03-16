@@ -41,6 +41,5 @@ class ReviewRejectionError(MLAgentTeamError):
         self.agent_name = agent_name
         self.findings = findings
         super().__init__(
-            f"Peer review rejected work from '{agent_name}': "
-            f"{len(findings)} issue(s) found"
+            f"Peer review rejected work from '{agent_name}': {len(findings)} issue(s) found"
         )
