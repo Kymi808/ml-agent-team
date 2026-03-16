@@ -1,0 +1,70 @@
+project_name: ml_experiment
+output_dir: ./output
+log_level: INFO
+max_optimization_rounds: 3
+enable_peer_review: true
+enable_literature_review: true
+
+data:
+  file_format: auto
+  test_size: 0.2
+  random_state: 42
+  stratify: true
+
+training:
+  cross_validation_folds: 5
+  early_stopping: true
+  early_stopping_patience: 10
+  hyperparameter_tuning: true
+  tuning_method: optuna
+  tuning_trials: 50
+
+llm:
+  provider: anthropic
+  model: claude-sonnet-4-20250514
+  api_key_env: ANTHROPIC_API_KEY
+  temperature: 0.2
+  max_tokens: 4096
+
+agents:
+  problem_analysis:
+    enabled: true
+    timeout_seconds: 60
+  literature_review:
+    enabled: true
+    timeout_seconds: 120
+  data_ingestion:
+    enabled: true
+    timeout_seconds: 120
+  eda:
+    enabled: true
+    timeout_seconds: 300
+  feature_engineering:
+    enabled: true
+    timeout_seconds: 300
+  model_selection:
+    enabled: true
+    timeout_seconds: 60
+  model_building:
+    enabled: true
+    timeout_seconds: 120
+  training:
+    enabled: true
+    timeout_seconds: 600
+    retry_on_failure: true
+    max_retries: 2
+  evaluation:
+    enabled: true
+    timeout_seconds: 300
+  diagnosis:
+    enabled: true
+    timeout_seconds: 120
+  optimization:
+    enabled: true
+    timeout_seconds: 120
+  reporting:
+    enabled: true
+    timeout_seconds: 120
+  peer_review:
+    enabled: true
+    timeout_seconds: 120
