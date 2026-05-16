@@ -28,14 +28,14 @@ class LLMProvider:
             try:
                 import anthropic
 
-                self._client = anthropic.Anthropic(api_key=api_key)
+                self._client = anthropic.AsyncAnthropic(api_key=api_key)
             except ImportError as e:
                 raise ImportError("Install anthropic: pip install ml-agent-team[llm]") from e
         elif self.config.provider == "openai":
             try:
                 import openai
 
-                self._client = openai.OpenAI(api_key=api_key)
+                self._client = openai.AsyncOpenAI(api_key=api_key)
             except ImportError as e:
                 raise ImportError("Install openai: pip install ml-agent-team[llm]") from e
         else:
@@ -48,14 +48,18 @@ class LLMProvider:
         client = self._init_client()
 
         if self.config.provider == "anthropic":
-            message = client.messages.create(
+            message = await client.messages.create(
                 model=self.config.model,
                 max_tokens=self.config.max_tokens,
                 temperature=self.config.temperature,
                 system=system,
                 messages=[{"role": "user", "content": prompt}],
             )
-            return message.content[0].text
+            # Skip non-text blocks (tool_use, thinking) so model swaps don't crash.
+            for block in message.content:
+                if getattr(block, "type", None) == "text":
+                    return block.text
+            return ""
 
         elif self.config.provider == "openai":
             messages = []
@@ -63,7 +67,7 @@ class LLMProvider:
                 messages.append({"role": "system", "content": system})
             messages.append({"role": "user", "content": prompt})
 
-            response = client.chat.completions.create(
+            response = await client.chat.completions.create(
                 model=self.config.model,
                 messages=messages,
                 temperature=self.config.temperature,
